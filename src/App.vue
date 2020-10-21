@@ -24,7 +24,13 @@
     </div>
 
     <!-- Show to do -->
-    <div class="md-layout md-gutter md-alignment-center">
+
+    <draggable
+      class="dragContainer md-layout md-gutter md-alignment-center"
+      v-model="todos"
+      @start="drag = true"
+      @end="drag = false"
+    >
       <md-card
         md-with-hover
         class="md-layout-item md-xlarge-size-20 md-large-size-25 md-medium-size-33 md-small-size-50 md-xsmall-size-70 todoCard"
@@ -67,25 +73,39 @@
         </md-field>
         <!-- Buttons -->
         <md-card-actions>
-          <span class="completeBtn" v-if="todo.completed"
-            ><md-icon class="md-icon-button md-accent"
-              >thumb_up
-              <md-tooltip class="compTooltip" md-direction="left"
-                >Completed!</md-tooltip
-              >
-            </md-icon>
+          <span class="completeBtnWrap">
+            <md-button
+              class="completeBtn md-icon-button md-accent md-raised"
+              v-if="todo.completed"
+              @click="completeTodo(todo)"
+            >
+              <md-icon class="completeBtn"
+                >thumb_up
+                <md-tooltip class="compTooltip" md-direction="left"
+                  >Completed!</md-tooltip
+                >
+              </md-icon>
+            </md-button>
+            <md-button
+              class="completeBtn md-icon-button md-raised"
+              v-if="!todo.completed"
+              @click="completeTodo(todo)"
+            >
+              <md-icon class="completeBtn"> thumb_up </md-icon>
+            </md-button>
           </span>
-          <md-switch v-model="todo.completed" value="Completed"> </md-switch>
 
           <md-button class="md-raised deleteBtn" @click="removeTodo(todo)"
             >Delete</md-button
           >
+
           <md-button
             class="md-fab md-mini md-plain editBtn"
             @click="editTodo(todo)"
           >
             <md-icon>edit</md-icon>
           </md-button>
+
           <md-button
             class="md-fab md-mini md-primary doneBtn"
             v-show="editedTodoId == todo.id"
@@ -95,12 +115,16 @@
           </md-button>
         </md-card-actions>
       </md-card>
-    </div>
+    </draggable>
   </div>
 </template>
 
 <script>
+import draggable from "vuedraggable";
 export default {
+  components: {
+    draggable,
+  },
   data() {
     return {
       todos: [],
@@ -132,13 +156,25 @@ export default {
     removeTodo(todo) {
       var index = this.todos.indexOf(todo);
       this.todos.splice(index, 1);
+      this.savetodo();
     },
     editTodo(todo) {
       this.editedTodoId = todo.id;
+      this.savetodo();
     },
     offEdit() {
       if (this.editedTodoId !== null) {
         this.editedTodoId = null;
+      }
+      this.savetodo();
+    },
+    completeTodo(todo) {
+      if (todo.completed === null) {
+        todo.completed = true;
+        this.savetodo();
+      } else {
+        todo.completed = null;
+        this.savetodo();
       }
     },
   },
@@ -149,11 +185,12 @@ export default {
 .todoCard {
   margin: 0.5rem 0.25rem;
 }
-.completeBtn,
+
 .editBtn,
 .doneBtn,
-.deleteBtn {
-  margin: 0 1rem;
+.deleteBtn,
+.completeBtnWrap {
+  margin: 0 0.3rem !important;
 }
 .compTooltip {
   font-size: 0.75rem;
